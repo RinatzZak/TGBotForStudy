@@ -1,20 +1,25 @@
 package com.rinatzzak.controller;
 
+import com.rinatzzak.service.UpdateProducer;
 import com.rinatzzak.util.MessageUtils;
 import lombok.extern.log4j.Log4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import static org.rinatzzak.model.RabbitQueue.*;
+
 @Component
 @Log4j
 public class UpdateController {
     private TelegramBot telegramBot;
 
-    private MessageUtils messageUtils;
+    private final MessageUtils messageUtils;
+    private final UpdateProducer updateProducer;
 
-    public UpdateController(MessageUtils messageUtils) {
+    public UpdateController(MessageUtils messageUtils, UpdateProducer updateProducer) {
         this.messageUtils = messageUtils;
+        this.updateProducer = updateProducer;
     }
 
     public void registerBot(TelegramBot telegramBot) {
@@ -55,12 +60,23 @@ public class UpdateController {
         telegramBot.sendAnswerMessage(sendMessage);
     }
 
-    private void processPhotoMessage(Update message) {
+    private void setFileIsReceivedView(Update update) {
+        var sendMessage = messageUtils.generateAnswerMessageWithText(update,
+                "File received! Processing in progress...");
+        setView(sendMessage);
     }
 
-    private void processDocumentMessage(Update message) {
+    private void processPhotoMessage(Update update) {
+        updateProducer.produce(PHOTO_MESSAGE_UPDATE, update);
+        setFileIsReceivedView(update);
     }
 
-    private void processTextMessage(Update message) {
+    private void processDocumentMessage(Update update) {
+        updateProducer.produce(DOC_MESSAGE_UPDATE, update);
+        setFileIsReceivedView(update);
+    }
+
+    private void processTextMessage(Update update) {
+        updateProducer.produce(TEXT_MESSAGE_UPDATE, update);
     }
 }

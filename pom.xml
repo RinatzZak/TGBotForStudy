@@ -11,7 +11,7 @@
     <modules>
         <module>dispatcher</module>
         <module>common-rabbitmq</module>
-        <module>common-rabbitmq</module>
+        <module>node</module>
     </modules>
 
     <properties>

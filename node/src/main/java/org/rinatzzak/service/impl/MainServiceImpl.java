@@ -29,7 +29,7 @@ public class MainServiceImpl implements MainService {
         produceService.produceAnswerMessage(sendMessage);
     }
 
-    private void saveRawData(Update update) {
+    public void saveRawData(Update update) {
         RawData rawData = RawData.builder()
                 .event(update)
                 .build();

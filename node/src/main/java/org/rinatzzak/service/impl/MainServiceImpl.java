@@ -1,5 +1,6 @@
 package org.rinatzzak.service.impl;
 
+import lombok.extern.log4j.Log4j;
 import org.rinatzzak.dao.AppUserDao;
 import org.rinatzzak.dao.RawDataDao;
 import org.rinatzzak.entity.AppUser;
@@ -9,11 +10,13 @@ import org.rinatzzak.service.ProduceService;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.User;
 
 import static org.rinatzzak.entity.enums.UserState.BASIC_STATE;
+import static org.rinatzzak.entity.enums.UserState.WAIT_FOR_EMAIL_STATE;
+import static org.rinatzzak.service.enums.ServiceCommands.CANCEL;
 
 @Service
+@Log4j
 public class MainServiceImpl implements MainService {
     private final RawDataDao rawDataDao;
     private final ProduceService produceService;
@@ -29,15 +32,33 @@ public class MainServiceImpl implements MainService {
     public void processMessageText(Update update) {
         saveRawData(update);
 
-        var textMessage = update.getMessage();
-        var telegramUser = textMessage.getFrom();
-        var appUser = findOrSaveAppUser(telegramUser);
+        var appUser = findOrSaveAppUser(update);
+        var userState = appUser.getState();
+        var text = update.getMessage().getText();
+        var output = "";
 
-        var message = update.getMessage();
-        var sendMessage = new SendMessage();
-        sendMessage.setChatId(message.getChatId().toString());
-        sendMessage.setText("Hello from NODE");
-        produceService.produceAnswerMessage(sendMessage);
+        if (CANCEL.equals(text)) {
+            output = cancelProcess(appUser);
+        } else if (BASIC_STATE.equals(userState)) {
+            output = processServiceCommand(appUser, text);
+        } else if (WAIT_FOR_EMAIL_STATE.equals(userState)) {
+            //TODO добавить обработку регистрации email
+        } else {
+            log.error("Unknown user state: " + userState);
+            output = "Unknown error! Please enter /cancel and try again!";
+        }
+
+        var chatId = update.getMessage().getChatId();
+        sendAnswer(output, chatId);
+    }
+
+    private void sendAnswer(String output, Long chatId) {
+    }
+
+    private String processServiceCommand(AppUser appUser, String text) {
+    }
+
+    private String cancelProcess(AppUser appUser) {
     }
 
     private void saveRawData(Update update) {
@@ -48,8 +69,8 @@ public class MainServiceImpl implements MainService {
         rawDataDao.save(rawData);
     }
 
-    private AppUser findOrSaveAppUser(User telegramUser) {
-        AppUser persistentAppUser = appUserDao.findAppUserByTelegramUserId(telegramUser.getId());
+    private AppUser findOrSaveAppUser(Update update) {
+        AppUser persistentAppUser = appUserDao.findAppUserByTelegramUserId(update.getId());
         if (persistentAppUser == null) {
             AppUser transientAppUser = AppUser.builder()
                     .telegramUserId(telegramUser.getId())

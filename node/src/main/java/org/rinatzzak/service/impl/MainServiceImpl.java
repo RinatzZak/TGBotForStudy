@@ -10,10 +10,11 @@ import org.rinatzzak.service.ProduceService;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 
 import static org.rinatzzak.entity.enums.UserState.BASIC_STATE;
 import static org.rinatzzak.entity.enums.UserState.WAIT_FOR_EMAIL_STATE;
-import static org.rinatzzak.service.enums.ServiceCommands.CANCEL;
+import static org.rinatzzak.service.enums.ServiceCommands.*;
 
 @Service
 @Log4j
@@ -53,12 +54,10 @@ public class MainServiceImpl implements MainService {
     }
 
     private void sendAnswer(String output, Long chatId) {
-    }
-
-    private String processServiceCommand(AppUser appUser, String text) {
-    }
-
-    private String cancelProcess(AppUser appUser) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+        sendMessage.setText(output);
+        produceService.produceAnswerMessage(sendMessage);
     }
 
     private void saveRawData(Update update) {
@@ -70,7 +69,8 @@ public class MainServiceImpl implements MainService {
     }
 
     private AppUser findOrSaveAppUser(Update update) {
-        AppUser persistentAppUser = appUserDao.findAppUserByTelegramUserId(update.getId());
+        User telegramUser = update.getMessage().getFrom();
+        AppUser persistentAppUser = appUserDao.findAppUserByTelegramUserId(telegramUser.getId());
         if (persistentAppUser == null) {
             AppUser transientAppUser = AppUser.builder()
                     .telegramUserId(telegramUser.getId())
@@ -84,6 +84,28 @@ public class MainServiceImpl implements MainService {
             return appUserDao.save(transientAppUser);
         }
         return persistentAppUser;
+    }
+
+    private String processServiceCommand(AppUser appUser, String cmd) {
+        if (REGISTRATION.equals(cmd)) {
+            //TODO добавить регистрацию
+            return "Command not available!";
+        } else if (HELP.equals(cmd)) {
+            return help();
+        } else if (START.equals(cmd)) {
+            return "Greetings! To see a list of available commands, type /help";
+        } else {
+            return "Unknown command! To see a list of available commands, type /help";
+        }
+    }
+
+    private String help() {
+    }
+
+    private String cancelProcess(AppUser appUser) {
+        appUser.setState(BASIC_STATE);
+        appUserDao.save(appUser);
+        return "Command is canceled!";
     }
 
 }

@@ -7,10 +7,13 @@ import org.rinatzzak.entity.AppUser;
 import org.rinatzzak.entity.RawData;
 import org.rinatzzak.service.MainService;
 import org.rinatzzak.service.ProduceService;
+import org.rinatzzak.service.enums.ServiceCommands;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
+
+import java.util.List;
 
 import static org.rinatzzak.entity.enums.UserState.BASIC_STATE;
 import static org.rinatzzak.entity.enums.UserState.WAIT_FOR_EMAIL_STATE;
@@ -100,6 +103,9 @@ public class MainServiceImpl implements MainService {
     }
 
     private String help() {
+        return "List of available commands: \n" +
+                " /cancel - Cancel the current command; \n " +
+                " /registration - Registration new user; \n";
     }
 
     private String cancelProcess(AppUser appUser) {

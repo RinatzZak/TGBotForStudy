@@ -104,7 +104,7 @@ public class MainServiceImpl implements MainService {
 
     private String help() {
         return "List of available commands: \n" +
-                " /cancel - Cancel the current command; \n " +
+                " /cancel - Cancel the current command; \n" +
                 " /registration - Registration new user; \n";
     }
 

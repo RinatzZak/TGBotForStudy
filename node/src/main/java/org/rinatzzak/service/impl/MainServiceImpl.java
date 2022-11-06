@@ -7,13 +7,10 @@ import org.rinatzzak.entity.AppUser;
 import org.rinatzzak.entity.RawData;
 import org.rinatzzak.service.MainService;
 import org.rinatzzak.service.ProduceService;
-import org.rinatzzak.service.enums.ServiceCommands;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
-
-import java.util.List;
 
 import static org.rinatzzak.entity.enums.UserState.BASIC_STATE;
 import static org.rinatzzak.entity.enums.UserState.WAIT_FOR_EMAIL_STATE;
@@ -54,6 +51,46 @@ public class MainServiceImpl implements MainService {
 
         var chatId = update.getMessage().getChatId();
         sendAnswer(output, chatId);
+    }
+
+    @Override
+    public void processDocumentText(Update update) {
+        saveRawData(update);
+        var appUser = findOrSaveAppUser(update);
+        var chatId = update.getMessage().getChatId();
+        if (isNotAllowedToSendContent(chatId, appUser)) {
+            return;
+        }
+        //TODO добавить сохранение документа
+        var answer = "Documents uploaded successfully! Download link: http://test.com/get-document/234";
+        sendAnswer(answer, chatId);
+    }
+
+    @Override
+    public void processPhotoText(Update update) {
+        saveRawData(update);
+        var appUser = findOrSaveAppUser(update);
+        var chatId = update.getMessage().getChatId();
+        if (isNotAllowedToSendContent(chatId, appUser)) {
+            return;
+        }
+        //TODO добавить сохранение фото
+        var answer = "Photo uploaded successfully! Download link: http://test.com/get-photo/234";
+        sendAnswer(answer, chatId);
+    }
+
+    private boolean isNotAllowedToSendContent(Long chatId, AppUser appUser) {
+        var userState = appUser.getState();
+        if (!appUser.getIsActive()) {
+            var error = "Register or activate an account to download files";
+            sendAnswer(error, chatId);
+            return true;
+        } else if (!BASIC_STATE.equals(userState)) {
+            var error = "Please, cancel current command with /cancel for download file";
+            sendAnswer(error, chatId);
+            return true;
+        }
+        return false;
     }
 
     private void sendAnswer(String output, Long chatId) {

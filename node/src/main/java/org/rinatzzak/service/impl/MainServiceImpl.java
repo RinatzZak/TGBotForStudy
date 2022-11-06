@@ -29,6 +29,10 @@ public class MainServiceImpl implements MainService {
     public void processMessageText(Update update) {
         saveRawData(update);
 
+        var textMessage = update.getMessage();
+        var telegramUser = textMessage.getFrom();
+        var appUser = findOrSaveAppUser(telegramUser);
+
         var message = update.getMessage();
         var sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId().toString());

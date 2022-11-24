@@ -1,12 +1,18 @@
 package org.rinatzzak.service.impl;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j;
 import org.rinatzzak.dao.AppUserDao;
 import org.rinatzzak.dao.RawDataDao;
 import org.rinatzzak.entity.AppUser;
 import org.rinatzzak.entity.RawData;
+import org.rinatzzak.entity.enums.AppDocument;
+import org.rinatzzak.exception.UploadFileException;
+import org.rinatzzak.service.FileService;
 import org.rinatzzak.service.MainService;
 import org.rinatzzak.service.ProduceService;
+import org.rinatzzak.service.enums.ServiceCommands;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -18,15 +24,18 @@ import static org.rinatzzak.service.enums.ServiceCommands.*;
 
 @Service
 @Log4j
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class MainServiceImpl implements MainService {
-    private final RawDataDao rawDataDao;
-    private final ProduceService produceService;
-    private final AppUserDao appUserDao;
+    RawDataDao rawDataDao;
+    ProduceService produceService;
+    AppUserDao appUserDao;
+    FileService fileService;
 
-    public MainServiceImpl(RawDataDao rawDataDao, ProduceService produceService, AppUserDao appUserDao) {
+    public MainServiceImpl(RawDataDao rawDataDao, ProduceService produceService, AppUserDao appUserDao, FileService fileService) {
         this.rawDataDao = rawDataDao;
         this.produceService = produceService;
         this.appUserDao = appUserDao;
+        this.fileService = fileService;
     }
 
     @Override
@@ -38,7 +47,8 @@ public class MainServiceImpl implements MainService {
         var text = update.getMessage().getText();
         var output = "";
 
-        if (CANCEL.equals(text)) {
+        var serviceCommand = ServiceCommands.fromValue(text);
+        if (CANCEL.equals(serviceCommand)) {
             output = cancelProcess(appUser);
         } else if (BASIC_STATE.equals(userState)) {
             output = processServiceCommand(appUser, text);
@@ -61,9 +71,16 @@ public class MainServiceImpl implements MainService {
         if (isNotAllowedToSendContent(chatId, appUser)) {
             return;
         }
-        //TODO добавить сохранение документа
-        var answer = "Documents uploaded successfully! Download link: http://test.com/get-document/234";
-        sendAnswer(answer, chatId);
+        try {
+            AppDocument appDocument = fileService.processDoc(update.getMessage());
+            //TODO добавить сохранение документа
+            var answer = "Documents uploaded successfully! Download link: http://test.com/get-document/234";
+            sendAnswer(answer, chatId);
+        } catch (UploadFileException e) {
+            log.error(e);
+            String error = "Please, try again";
+            sendAnswer(error, chatId);
+        }
     }
 
     @Override
@@ -127,12 +144,13 @@ public class MainServiceImpl implements MainService {
     }
 
     private String processServiceCommand(AppUser appUser, String cmd) {
-        if (REGISTRATION.equals(cmd)) {
+        var serviceCommand = ServiceCommands.fromValue(cmd);
+        if (REGISTRATION.equals(serviceCommand)) {
             //TODO добавить регистрацию
             return "Command not available!";
-        } else if (HELP.equals(cmd)) {
+        } else if (HELP.equals(serviceCommand)) {
             return help();
-        } else if (START.equals(cmd)) {
+        } else if (START.equals(serviceCommand)) {
             return "Greetings! To see a list of available commands, type /help";
         } else {
             return "Unknown command! To see a list of available commands, type /help";

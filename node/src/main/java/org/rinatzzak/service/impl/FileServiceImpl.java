@@ -49,7 +49,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public AppDocument processDoc(Message tgMessage) {
         Document tgDoc = tgMessage.getDocument();
-        String fileId = tgMessage.getDocument().getFileId();
+        String fileId = tgDoc.getFileId();
         ResponseEntity<String> response = getFilePath(fileId);
         if (response.getStatusCode() == HttpStatus.OK) {
             BinaryContent persistentBinaryContent = getPersistentBinaryContent(response);
@@ -63,7 +63,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public AppPhoto processPhoto(Message tgMessage) {
         PhotoSize photoSize = tgMessage.getPhoto().get(0);
-        String fileId = tgMessage.getDocument().getFileId();
+        String fileId = photoSize.getFileId();
         ResponseEntity<String> response = getFilePath(fileId);
         if (response.getStatusCode() == HttpStatus.OK) {
             BinaryContent persistentBinaryContent = getPersistentBinaryContent(response);

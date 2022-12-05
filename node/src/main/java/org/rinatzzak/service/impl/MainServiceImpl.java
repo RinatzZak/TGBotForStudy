@@ -5,6 +5,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j;
 import org.rinatzzak.dao.AppUserDao;
 import org.rinatzzak.dao.RawDataDao;
+import org.rinatzzak.entity.AppPhoto;
 import org.rinatzzak.entity.AppUser;
 import org.rinatzzak.entity.RawData;
 import org.rinatzzak.entity.AppDocument;
@@ -91,9 +92,15 @@ public class MainServiceImpl implements MainService {
         if (isNotAllowedToSendContent(chatId, appUser)) {
             return;
         }
-        //TODO добавить сохранение фото
-        var answer = "Photo uploaded successfully! Download link: http://test.com/get-photo/234";
-        sendAnswer(answer, chatId);
+       try {
+           AppPhoto appPhoto = fileService.processPhoto(update.getMessage());
+           var answer = "Photo uploaded successfully! Download link: http://test.com/get-photo/234";
+           sendAnswer(answer, chatId);
+       } catch (UploadFileException e) {
+            log.error(e);
+            String error = "Please, try again";
+            sendAnswer(error, chatId);
+        }
     }
 
     private boolean isNotAllowedToSendContent(Long chatId, AppUser appUser) {

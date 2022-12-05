@@ -7,7 +7,7 @@ import org.rinatzzak.dao.AppUserDao;
 import org.rinatzzak.dao.RawDataDao;
 import org.rinatzzak.entity.AppUser;
 import org.rinatzzak.entity.RawData;
-import org.rinatzzak.entity.enums.AppDocument;
+import org.rinatzzak.entity.AppDocument;
 import org.rinatzzak.exception.UploadFileException;
 import org.rinatzzak.service.FileService;
 import org.rinatzzak.service.MainService;

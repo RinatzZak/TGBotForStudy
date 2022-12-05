@@ -1,4 +1,4 @@
-package org.rinatzzak.entity.enums;
+package org.rinatzzak.entity;
 
 import lombok.*;
 import org.hibernate.Hibernate;

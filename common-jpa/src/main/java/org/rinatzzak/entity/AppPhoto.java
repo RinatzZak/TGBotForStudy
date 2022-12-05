@@ -19,7 +19,7 @@ public class AppPhoto {
     private String telegramFileId;
     @OneToOne
     private BinaryContent binaryContent;
-    private Long fileSize;
+    private Integer fileSize;
 
 
 }

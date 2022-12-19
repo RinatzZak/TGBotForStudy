@@ -13,6 +13,7 @@ import org.rinatzzak.exception.UploadFileException;
 import org.rinatzzak.service.FileService;
 import org.rinatzzak.service.MainService;
 import org.rinatzzak.service.ProduceService;
+import org.rinatzzak.service.enums.LinkType;
 import org.rinatzzak.service.enums.ServiceCommands;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -74,8 +75,8 @@ public class MainServiceImpl implements MainService {
         }
         try {
             AppDocument appDocument = fileService.processDoc(update.getMessage());
-            //TODO добавить сохранение документа
-            var answer = "Documents uploaded successfully! Download link: http://test.com/get-document/234";
+            String link = fileService.generateLink(appDocument.getId(), LinkType.GET_DOC);
+            var answer = "Documents uploaded successfully! Download link: " + link;
             sendAnswer(answer, chatId);
         } catch (UploadFileException e) {
             log.error(e);
@@ -94,7 +95,8 @@ public class MainServiceImpl implements MainService {
         }
        try {
            AppPhoto appPhoto = fileService.processPhoto(update.getMessage());
-           var answer = "Photo uploaded successfully! Download link: http://test.com/get-photo/234";
+           String link = fileService.generateLink(appPhoto.getId(), LinkType.GET_PHOTO);
+           var answer = "Photo uploaded successfully! Download link: " + link;
            sendAnswer(answer, chatId);
        } catch (UploadFileException e) {
             log.error(e);

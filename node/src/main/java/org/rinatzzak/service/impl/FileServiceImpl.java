@@ -12,6 +12,8 @@ import org.rinatzzak.entity.AppPhoto;
 import org.rinatzzak.entity.BinaryContent;
 import org.rinatzzak.exception.UploadFileException;
 import org.rinatzzak.service.FileService;
+import org.rinatzzak.service.enums.LinkType;
+import org.rinatzzak.utils.CryptoTool;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -35,15 +37,19 @@ public class FileServiceImpl implements FileService {
     String fileInfoUri;
     @Value("${service.file_storage.uri}")
     String fileStorageUri;
+    @Value("${link.address}")
+    String linkAddress;
 
     final AppDocumentDao appDocumentDao;
     final BinaryContentDao binaryContentDao;
     final AppPhotoDao appPhotoDao;
+    final CryptoTool cryptoTool;
 
-    public FileServiceImpl(AppDocumentDao appDocumentDao, BinaryContentDao binaryContentDao, AppPhotoDao appPhotoDao) {
+    public FileServiceImpl(AppDocumentDao appDocumentDao, BinaryContentDao binaryContentDao, AppPhotoDao appPhotoDao, CryptoTool cryptoTool) {
         this.appDocumentDao = appDocumentDao;
         this.binaryContentDao = binaryContentDao;
         this.appPhotoDao = appPhotoDao;
+        this.cryptoTool = cryptoTool;
     }
 
     @Override
@@ -139,5 +145,11 @@ public class FileServiceImpl implements FileService {
                 String.class,
                 token, fileId
         );
+    }
+
+    @Override
+    public String generateLink(Long docId, LinkType linkType) {
+        var hash = cryptoTool.hashOf(docId);
+        return "http://" + linkAddress + "/" + linkType + "?id=" + hash;
     }
 }
